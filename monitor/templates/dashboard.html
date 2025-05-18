@@ -1,0 +1,43 @@
+<!doctype html>
+<html class="dark" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>DDoS Monitor</title>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-8">
+  <h1 class="text-3xl font-bold mb-6">DDoS Live Dashboard</h1>
+
+  <div id="status" class="mb-4">
+    Backend: <span id="alive" class="font-semibold">—</span> •
+    CPU: <span id="cpu">0</span> %
+  </div>
+
+  <h2 class="text-xl mb-2">Blocked IPs</h2>
+  <table id="ips" class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
+    <thead><tr><th class="px-3 py-2 text-left">IP</th><th>Reason</th><th>Time</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function poll(){
+      const r = await fetch("/status/");
+      const d = await r.json();
+      document.getElementById("alive").textContent = d.alive ? "✔" : "✖";
+      document.getElementById("cpu").textContent = d.cpu.toFixed(1);
+
+      const tbody = document.querySelector("#ips tbody");
+      tbody.innerHTML = "";
+      d.blocked.forEach(row=>{
+        tbody.insertAdjacentHTML("beforeend",
+          `<tr class="border-b border-gray-700">
+             <td class="px-3 py-1">${row.ip}</td>
+             <td>${row.reason}</td>
+             <td>${new Date(row.created_at).toLocaleTimeString()}</td>
+           </tr>`);
+      });
+    }
+    poll(); setInterval(poll, 2000);
+  </script>
+</body>
+</html>

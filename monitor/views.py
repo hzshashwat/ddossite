@@ -1,14 +1,25 @@
-import psutil, json, datetime
+import json, psutil, time
 from django.http import JsonResponse
-from django.shortcuts import render
 from .models import BlockedIP
+from prometheus_client import Gauge
 
-def dashboard(request):
-    return render(request, "monitor/dashboard.html")
+cpu_gauge      = Gauge('django_cpu_percent', 'CPU percent via psutil')
+blocked_gauge  = Gauge('blocked_ip_total', 'Total blocked IPs')
 
-def stats_api(request):
-    cpu   = psutil.cpu_percent(interval=None)
-    mem   = psutil.virtual_memory().percent
-    count = BlockedIP.objects.count()
-    return JsonResponse({"cpu": cpu, "mem": mem, "blocked": count,
-                         "ts": datetime.datetime.now().isoformat()})
+def status(request):
+    cpu = psutil.cpu_percent(interval=None)
+    cpu_gauge.set(cpu)
+
+    blocked = list(BlockedIP.objects
+                   .values('ip', 'reason', 'created_at')
+                   .order_by('-created_at')[:50])
+    blocked_gauge.set(len(blocked))
+    return JsonResponse({
+        "alive": True,
+        "timestamp": time.time(),
+        "cpu": cpu,
+        "blocked": blocked,
+    })
+
+from django.shortcuts import render
+def dashboard(request): return render(request, "dashboard.html")

@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from monitor.views import status, dashboard
+from django_prometheus import exports as prom_exports
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", include("monitor.urls")),
+    path("", dashboard, name="dash"),
+    path('status/',  status),
+    path('metrics/', prom_exports.ExportToDjangoView),
 ]
