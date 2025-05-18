@@ -8,11 +8,13 @@ constantly==23.10.4
 cryptography==45.0.2
 daphne==4.2.0
 Django==5.2
+django-prometheus==2.3.1
 gunicorn==23.0.0
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
 packaging==25.0
+prometheus_client==0.22.0
 psutil==7.0.0
 psycopg2-binary==2.9.10
 pyasn1==0.6.1
