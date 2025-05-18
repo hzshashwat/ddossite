@@ -1,0 +1,49 @@
+<!doctype html>
+<html class="h-full" data-theme="dark">
+<head>
+    <meta charset="utf-8"/>
+    <title>DDoS Demo Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-gray-950 text-gray-200 flex flex-col items-center p-8 gap-8">
+
+<h1 class="text-3xl font-semibold">Target Server Health</h1>
+
+<div class="grid md:grid-cols-3 gap-6 w-full max-w-5xl">
+
+  <!-- Live gauges -->
+  <div class="bg-gray-900 rounded-xl p-6 flex flex-col items-center">
+     <canvas id="cpuChart" width="160"></canvas>
+     <p class="mt-2">CPU&nbsp;%</p>
+  </div>
+  <div class="bg-gray-900 rounded-xl p-6 flex flex-col items-center">
+     <canvas id="memChart" width="160"></canvas>
+     <p class="mt-2">RAM&nbsp;%</p>
+  </div>
+  <div class="bg-gray-900 rounded-xl p-6 flex flex-col">
+     <h2 class="text-lg mb-2">Blocked IPs</h2>
+     <ul id="ipList" class="flex-1 space-y-1 text-sm overflow-y-auto h-40 px-2"></ul>
+  </div>
+</div>
+
+<script>
+ const dial = (ctx,bg)=>new Chart(ctx,{type:"doughnut",
+   data:{datasets:[{data:[0,100],borderWidth:0}]},
+   options:{plugins:{legend:{display:!1}},cutout:"80%"}});
+ const cpuDial=dial(cpuChart.getContext("2d"));
+ const memDial=dial(memChart.getContext("2d"));
+
+ async function poll(){
+   const r=await fetch("/api/stats/").then(r=>r.json());
+   cpuDial.data.datasets[0].data=[r.cpu,100-r.cpu];
+   memDial.data.datasets[0].data=[r.mem,100-r.mem];
+   cpuDial.update(); memDial.update();
+
+   document.getElementById("ipList").innerHTML =
+     [...Array(r.blocked).keys()].map(i=>`<li>IP-${i+1}</li>`).join("");
+ }
+ setInterval(poll,3000); poll();
+</script>
+</body></html>
